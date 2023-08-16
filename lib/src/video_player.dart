@@ -108,12 +108,25 @@ class VideoPlayer {
         }));
         _hls!.on('hlsError', allowInterop((dynamic _, dynamic data) {
           final ErrorData _data = ErrorData(data);
-          if (_data.fatal) {
-            _eventController.addError(PlatformException(
-              code: _kErrorValueToErrorName[2]!,
-              message: _data.type,
-              details: _data.details,
-            ));
+          debugPrint(
+              _data.type + ' ' + _data.details + ' ' + _data.fatal.toString());
+          switch (_data.type) {
+            case 'networkError':
+              debugPrint("fatal network error encountered, try to recover");
+              _hls!.loadSource(uri.toString());
+              break;
+            case 'mediaError':
+              debugPrint("fatal media error encountered, try to recover");
+              _hls!.recoverMediaError();
+              break;
+            default:
+              _eventController.addError(PlatformException(
+                code: _kErrorValueToErrorName[2]!,
+                message: _data.type,
+                details: _data.details,
+              ));
+              _hls!.stopLoad();
+              break;
           }
         }));
         _videoElement.onCanPlay.listen((dynamic _) {
@@ -319,9 +332,9 @@ class VideoPlayer {
   bool canPlayHlsNatively() {
     bool canPlayHls = false;
     try {
-      final String canPlayType = _videoElement.canPlayType('application/vnd.apple.mpegurl');
-      canPlayHls =
-          canPlayType != '';
+      final String canPlayType =
+          _videoElement.canPlayType('application/vnd.apple.mpegurl');
+      canPlayHls = canPlayType != '';
     } catch (e) {}
     return canPlayHls;
   }

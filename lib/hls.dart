@@ -19,6 +19,9 @@ class Hls {
   external void loadSource(String videoSrc);
 
   @JS()
+  external void recoverMediaError();
+
+  @JS()
   external void attachMedia(VideoElement video);
 
   @JS()
